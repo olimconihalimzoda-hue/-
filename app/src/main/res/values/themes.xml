@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ev_window_bg">#FFF2F8FA</color>
+
+    <style name="Theme.EVDiag" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/ev_window_bg</item>
+    </style>
+</resources>

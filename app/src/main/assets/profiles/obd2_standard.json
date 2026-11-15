@@ -1,0 +1,76 @@
+{
+  "id": "obd2_standard",
+  "name": "Любой автомобиль (стандартный OBD-II)",
+  "verified": true,
+  "protocol": "0",
+  "notes": "Стандартные PID SAE J1979. Для большинства EV доступен минимум: скорость, напряжение бортсети, иногда остаток заряда (PID 5B). Подробные данные батареи — только в профилях конкретных марок.",
+  "vinPrefixes": [],
+  "ecus": [
+    {
+      "id": "all",
+      "name": "OBD-II (широковещательный)",
+      "tx": "7DF"
+    }
+  ],
+  "requests": [
+    {
+      "id": "speed",
+      "ecu": "all",
+      "cmd": "010D"
+    },
+    {
+      "id": "voltage",
+      "ecu": "all",
+      "cmd": "0142"
+    },
+    {
+      "id": "ambient",
+      "ecu": "all",
+      "cmd": "0146"
+    },
+    {
+      "id": "hvsoc",
+      "ecu": "all",
+      "cmd": "015B"
+    }
+  ],
+  "fields": [
+    {
+      "id": "std_speed",
+      "name": "Скорость",
+      "unit": "км/ч",
+      "group": "live",
+      "request": "speed",
+      "expr": "b(2)",
+      "decimals": 0
+    },
+    {
+      "id": "std_voltage",
+      "name": "Напряжение бортсети 12 В",
+      "unit": "В",
+      "group": "live",
+      "request": "voltage",
+      "expr": "u16(2)/1000",
+      "decimals": 2
+    },
+    {
+      "id": "std_ambient",
+      "name": "Температура снаружи",
+      "unit": "°C",
+      "group": "live",
+      "request": "ambient",
+      "expr": "b(2)-40",
+      "decimals": 0
+    },
+    {
+      "id": "std_hvsoc",
+      "name": "Остаток заряда HV (PID 5B)",
+      "unit": "%",
+      "group": "battery",
+      "request": "hvsoc",
+      "expr": "b(2)*100/255",
+      "decimals": 0,
+      "role": "soc"
+    }
+  ]
+}

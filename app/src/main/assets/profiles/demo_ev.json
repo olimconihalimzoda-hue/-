@@ -1,0 +1,89 @@
+{
+  "id": "demo_ev",
+  "name": "ДЕМО (симулятор, данные вымышленные)",
+  "extends": "obd2_standard",
+  "verified": false,
+  "protocol": "6",
+  "notes": "Профиль для виртуального адаптера. Все значения вымышлены и нужны только для проверки интерфейса. Это же образец профиля: у полей батареи указаны роли (role), по ним работают светофор, шкала заряда и оценка ёмкости.",
+  "vinPrefixes": [],
+  "ecus": [
+    {
+      "id": "bms",
+      "name": "BMS (демо)",
+      "tx": "7E4",
+      "rx": "7EC",
+      "udsDtc": true
+    }
+  ],
+  "requests": [
+    {
+      "id": "bms_01",
+      "ecu": "bms",
+      "cmd": "220101"
+    }
+  ],
+  "fields": [
+    {
+      "id": "demo_soc",
+      "name": "SOC",
+      "unit": "%",
+      "group": "battery",
+      "request": "bms_01",
+      "expr": "b(3)/2",
+      "decimals": 1,
+      "role": "soc"
+    },
+    {
+      "id": "demo_soh",
+      "name": "SOH",
+      "unit": "%",
+      "group": "battery",
+      "request": "bms_01",
+      "expr": "b(4)",
+      "decimals": 0,
+      "role": "soh"
+    },
+    {
+      "id": "demo_packv",
+      "name": "Напряжение батареи",
+      "unit": "В",
+      "group": "battery",
+      "request": "bms_01",
+      "expr": "u16(5)/10",
+      "decimals": 1,
+      "role": "packV"
+    },
+    {
+      "id": "demo_temp",
+      "name": "Температура батареи",
+      "unit": "°C",
+      "group": "battery",
+      "request": "bms_01",
+      "expr": "b(9)-40",
+      "decimals": 0,
+      "role": "temp"
+    },
+    {
+      "id": "demo_cells",
+      "name": "Напряжение ячеек",
+      "unit": "В",
+      "group": "cells",
+      "request": "bms_01",
+      "expr": "u16(10+i*2)/1000",
+      "repeat": 12,
+      "decimals": 3,
+      "role": "cells"
+    },
+    {
+      "id": "demo_current",
+      "name": "Ток батареи",
+      "unit": "А",
+      "group": "live",
+      "request": "bms_01",
+      "expr": "s16(7)/10",
+      "decimals": 1,
+      "role": "current"
+    }
+  ],
+  "nominalKwh": 40.0
+}

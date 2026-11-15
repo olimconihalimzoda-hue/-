@@ -1,0 +1,19 @@
+{
+  "id": "nissan_leaf",
+  "name": "Nissan Leaf (ZE0 / AZE0)",
+  "extends": "obd2_standard",
+  "verified": false,
+  "protocol": "6",
+  "notes": "ЗАГОТОВКА. Батарея (LBC) отвечает на 79B по запросам 21 01, 21 02, 21 04, 21 05 с заголовком 79B и ответом на 7BB; формат различается у ZE0 и AZE0. Смещения байт НЕ внесены: снимите реальные ответы через вкладку «Консоль», сверьте с документацией и добавьте поля в fields.",
+  "vinPrefixes": ["SJN", "JN1", "1N4"],
+  "ecus": [
+    { "id": "lbc", "name": "Контроллер батареи (LBC)", "tx": "79B", "rx": "7BB" }
+  ],
+  "requests": [
+    { "id": "lbc_01", "ecu": "lbc", "cmd": "2101", "pre": ["ATSH79B", "ATFCSH79B", "ATFCSD300000", "ATFCSM1"] },
+    { "id": "lbc_02", "ecu": "lbc", "cmd": "2102", "pre": ["ATSH79B", "ATFCSH79B", "ATFCSD300000", "ATFCSM1"] },
+    { "id": "lbc_04", "ecu": "lbc", "cmd": "2104", "pre": ["ATSH79B", "ATFCSH79B", "ATFCSD300000", "ATFCSM1"] },
+    { "id": "lbc_05", "ecu": "lbc", "cmd": "2105", "pre": ["ATSH79B", "ATFCSH79B", "ATFCSD300000", "ATFCSM1"] }
+  ],
+  "fields": []
+}

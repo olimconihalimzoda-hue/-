@@ -1,0 +1,14 @@
+{
+  "id": "renault_zoe",
+  "name": "Renault Zoe",
+  "extends": "obd2_standard",
+  "verified": false,
+  "protocol": "6",
+  "notes": "ЗАГОТОВКА. LBC на 7BB (ответ 7B3) и EVC на 7EC/7E4 — адреса и DID уточняйте для вашей версии (Q210/R90/R110/ZE50). Формулы НЕ внесены.",
+  "vinPrefixes": ["VF1"],
+  "ecus": [
+    { "id": "lbc", "name": "Батарея (LBC)", "tx": "79B", "rx": "7BB", "udsDtc": true }
+  ],
+  "requests": [],
+  "fields": []
+}

@@ -1,0 +1,14 @@
+{
+  "id": "vw_id",
+  "name": "VW ID.3 / ID.4 (группа MEB)",
+  "extends": "obd2_standard",
+  "verified": false,
+  "protocol": "6",
+  "notes": "ЗАГОТОВКА. Группа VAG использует UDS поверх ISO-TP (адреса вида 7E5 / 7ED для BMS — уточняйте), чтение по сервису 22 с DID. Данные батареи у MEB защищены, часть недоступна без сессии/доступа. DID и формулы НЕ внесены.",
+  "vinPrefixes": ["WVW", "WVG", "WV2", "WV1"],
+  "ecus": [
+    { "id": "bms", "name": "BMS (адрес уточнить)", "tx": "7E5", "rx": "7ED", "udsDtc": true }
+  ],
+  "requests": [],
+  "fields": []
+}

@@ -1,0 +1,21 @@
+{
+  "id": "hyundai_kia_ev",
+  "name": "Hyundai / Kia EV (Kona, Ioniq, Niro, EV6 и др.)",
+  "extends": "obd2_standard",
+  "verified": false,
+  "protocol": "6",
+  "notes": "ЗАГОТОВКА. BMS обычно: запрос на 7E4, ответ с 7EC; команды 220101, 220102, 220103, 220104, 220105 (данные ячеек, SOC, SOH, температуры). Смещения байт различаются по моделям и годам и НЕ внесены: снимите ответы в «Консоли» и добавьте поля.",
+  "vinPrefixes": ["KNA", "KND", "KNC", "KMH", "KM8", "U5Y", "TMA"],
+  "ecus": [
+    { "id": "bms", "name": "BMS", "tx": "7E4", "rx": "7EC", "udsDtc": true },
+    { "id": "vmcu", "name": "VMCU", "tx": "7E2", "rx": "7EA", "udsDtc": true }
+  ],
+  "requests": [
+    { "id": "bms_01", "ecu": "bms", "cmd": "220101" },
+    { "id": "bms_02", "ecu": "bms", "cmd": "220102" },
+    { "id": "bms_03", "ecu": "bms", "cmd": "220103" },
+    { "id": "bms_04", "ecu": "bms", "cmd": "220104" },
+    { "id": "bms_05", "ecu": "bms", "cmd": "220105" }
+  ],
+  "fields": []
+}
