@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.evdiag.data.FileShare
 import java.util.Locale
 
@@ -50,7 +51,7 @@ fun DiagnosticsScreen(vm: DiagViewModel) {
     Column(Modifier.fillMaxSize()) {
         TabRow(selectedTabIndex = sub, containerColor = Color.Transparent) {
             titles.forEachIndexed { i, t ->
-                Tab(selected = sub == i, onClick = { sub = i }, text = { Text(t) })
+                Tab(selected = sub == i, onClick = { sub = i }, text = { Text(t, maxLines = 1, softWrap = false, fontSize = 13.sp) })
             }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -130,6 +131,11 @@ private fun BatteryTab(vm: DiagViewModel) {
                         "ячеек: ${cells.size} · мин %.3f В · макс %.3f В".format(Locale.US, cells.min(), cells.max()),
                     )
                 }
+                AppCard {
+                    SectionTitle("3D-вид батареи")
+                    Pack3D(cells)
+                    InfoText("Тяните пальцем влево-вправо, чтобы повернуть. Высота и цвет столбика показывают напряжение ячейки.")
+                }
             }
         }
     }
@@ -199,7 +205,8 @@ private fun SessionTab(vm: DiagViewModel) {
                     listOf(
                         "Время" to fmtDuration(s.seconds),
                         "SOC" to "${fmtPct(s.socStart)} → ${fmtPct(s.socNow)}",
-                        "Энергия" to "%.2f кВт·ч".format(Locale.US, s.energyKwh),
+                        (if (s.energyKwh >= 0.0) "Заряжено" else "Израсходовано") to
+                            "%.2f кВт·ч".format(Locale.US, kotlin.math.abs(s.energyKwh)),
                         "Ёмкость (оценка)" to (if (est != null) "%.1f кВт·ч".format(Locale.US, est.kwh) else "нужно ≥5% по SOC"),
                     ),
                 )

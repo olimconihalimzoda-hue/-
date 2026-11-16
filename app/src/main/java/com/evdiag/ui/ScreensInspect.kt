@@ -108,6 +108,10 @@ fun InspectionScreen(vm: DiagViewModel) {
                     SectionTitle("Ячейки батареи")
                     CellBars(cells)
                 }
+                AppCard {
+                    SectionTitle("3D-вид батареи")
+                    Pack3D(cells)
+                }
             }
             AppCard {
                 SectionTitle("Ошибки")

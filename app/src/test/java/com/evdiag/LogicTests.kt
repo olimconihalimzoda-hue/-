@@ -52,6 +52,19 @@ class VerdictTest {
     }
 
     @Test
+    fun duplicateUdsSuffixIsCountedOnce() {
+        val v = Verdict.evaluate(98.0, 5.0, listOf("P0A80", "P0A80-00"), true)
+        assertEquals(1, Regex("P0A80").findAll(v.reasons.joinToString(" ")).count())
+        assertEquals("Ошибки высоковольтной системы", v.title)
+    }
+
+    @Test
+    fun problemsComeBeforeGoodNews() {
+        val v = Verdict.evaluate(95.0, 10.0, listOf("U0100"), true)
+        assertTrue(v.reasons.first().contains("U0100"))
+    }
+
+    @Test
     fun reasonsAreNeverEmpty() {
         assertTrue(Verdict.evaluate(null, null, emptyList(), false).reasons.isNotEmpty())
     }

@@ -58,7 +58,7 @@ fun App(vm: DiagViewModel = viewModel()) {
     var tab by remember { mutableIntStateOf(0) }
     val ctx = LocalContext.current
     val items = listOf(
-        NavItem("Подключение", Icons.Rounded.Bluetooth),
+        NavItem("Связь", Icons.Rounded.Bluetooth),
         NavItem("Диагностика", Icons.Rounded.Speed),
         NavItem("Проверка", Icons.Rounded.CheckCircle),
         NavItem("История", Icons.Rounded.History),
@@ -82,7 +82,7 @@ fun App(vm: DiagViewModel = viewModel()) {
                         selected = tab == i,
                         onClick = { tab = i },
                         icon = { Icon(item.icon, contentDescription = item.label) },
-                        label = { Text(item.label, maxLines = 1, fontSize = 11.sp) },
+                        label = { Text(item.label, maxLines = 1, softWrap = false, fontSize = 10.sp) },
                     )
                 }
             }

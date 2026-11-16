@@ -37,6 +37,7 @@ class ReportData(
     val indicators: List<Pair<String, String>>,
     val cells: List<Double>,
     val dtcLines: List<String>,
+    val demo: Boolean = false,
 )
 
 object ReportGenerator {
@@ -186,15 +187,26 @@ object ReportGenerator {
         // ---- данные автомобиля ----
         fun row(k: String, v: String) {
             if (v.isBlank()) return
-            ensure(18f)
+            ensure(16f)
             page!!.canvas.drawText(k, M, y + 10f, label)
             page!!.canvas.drawText(v, M + 110f, y + 11f, value)
-            y += 18f
+            y += 16f
         }
         row("Автомобиль", d.vehicle)
         row("VIN", d.vin ?: "не определён")
         row("Пробег", if (d.mileage.isBlank()) "" else d.mileage + " км")
         row("Клиент", d.client)
+        if (d.demo) {
+            y += 6f
+            ensure(34f)
+            val cd = page!!.canvas
+            cd.drawRoundRect(RectF(M, y, W - M, y + 28f), 8f, 8f, Paint().apply { color = Color.rgb(224, 80, 79) })
+            cd.drawText(
+                "ДЕМО-ДАННЫЕ: получено в симуляторе, не является проверкой реального автомобиля",
+                M + 12f, y + 18f, paint(10f, Color.WHITE, true),
+            )
+            y += 34f
+        }
         if (!d.profileVerified) {
             y += 4f
             text("Внимание: профиль автомобиля не проверен на реальной машине, расширенные данные могут быть неточными.", paint(10f, Color.rgb(176, 122, 0)))
@@ -237,23 +249,23 @@ object ReportGenerator {
             section("Показатели")
             var col = 0
             for ((k, v) in d.indicators) {
-                if (col == 0) ensure(36f)
+                if (col == 0) ensure(32f)
                 val x = M + col * (pw / 2f)
                 page!!.canvas.drawText(k, x, y + 9f, label)
                 page!!.canvas.drawText(v, x, y + 26f, value)
                 col++
                 if (col == 2) {
                     col = 0
-                    y += 36f
+                    y += 32f
                 }
             }
-            if (col != 0) y += 36f
+            if (col != 0) y += 32f
         }
 
         // ---- диаграмма ячеек ----
         if (d.cells.isNotEmpty()) {
             section("Напряжения ячеек, В")
-            ensure(120f)
+            ensure(104f)
             val c = page!!.canvas
             val n = d.cells.size
             val mn = d.cells.min()
@@ -261,7 +273,7 @@ object ReportGenerator {
             val median = d.cells.sorted()[n / 2]
             val lo = mn - 0.02
             val span = ((mx + 0.005) - lo).coerceAtLeast(0.001)
-            val chartH = 80f
+            val chartH = 64f
             val gap = if (n > 60) 0.6f else 2f
             val bw = (pw - gap * (n - 1)) / n
             for ((i, v) in d.cells.withIndex()) {

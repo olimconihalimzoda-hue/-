@@ -86,6 +86,7 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
     val cells = mutableStateMapOf<String, List<Double>>()
     val series = mutableStateMapOf<String, List<Float>>()
     val logLines = mutableStateListOf<String>()
+    var isDemo by mutableStateOf(false)
     var live by mutableStateOf(false)
 
     // ---------- Проверка и отчёт ----------
@@ -195,6 +196,7 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
             status = "Подключение…"
             try {
                 val e = Elm327(transport)
+                isDemo = transport is com.evdiag.transport.SimulatorTransport
                 e.log = ::addLog
                 e.init(profile?.protocol ?: "6")
                 elm = e
@@ -266,8 +268,21 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
                     }
                 }
             }
+            // один и тот же код из разных режимов/блоков показываем одной строкой
+            val merged = linkedMapOf<String, DtcItem>()
+            for (it in found) {
+                val base = it.code.substringBefore('-')
+                val ex = merged[base]
+                if (ex == null) {
+                    merged[base] = it.copy(code = base, status = listOfNotNull(it.status).joinToString().ifBlank { null })
+                } else {
+                    val src = if (it.source in ex.source) ex.source else ex.source + " + " + it.source
+                    val st = listOfNotNull(ex.status, it.status).distinct().joinToString(", ").ifBlank { null }
+                    merged[base] = ex.copy(source = src, status = st)
+                }
+            }
             dtcs.clear()
-            dtcs.addAll(found)
+            dtcs.addAll(merged.values)
             dtcReadDone = true
         }
     }
@@ -278,7 +293,7 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
         val e = elm ?: return@runExclusive
         ioLock.withLock {
             e.selectEcu("7DF", null)
-            e.query("04")
+            e.query("04", retries = 0)
             dtcs.clear()
             dtcReadDone = false
         }
@@ -400,7 +415,7 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
         val p = profile ?: return null
         val v = verdict()
         val now = System.currentTimeMillis()
-        val id = "EV-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date(now)) + "-" +
+        val id = (if (isDemo) "DEMO-" else "EV-") + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date(now)) + "-" +
             UUID.randomUUID().toString().take(4).uppercase()
         val soh = numByRole("soh")
         val spread = spreadMv()
@@ -422,6 +437,7 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
             indicators = indicators(),
             cells = cellsList(),
             dtcLines = dtcLines,
+            demo = isDemo,
         )
         return try {
             val file = ReportGenerator.create(app, data)

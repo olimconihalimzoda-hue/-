@@ -19,35 +19,38 @@ object Verdict {
     fun evaluate(soh: Double?, spreadMv: Double?, dtcCodes: List<String>, dtcRead: Boolean): VerdictResult {
         // 0 = хорошо, 1 = внимание, 2 = плохо
         var sev = 0
-        val reasons = mutableListOf<String>()
+        var batteryBad = false
+        val bad = mutableListOf<String>()
+        val good = mutableListOf<String>()
+        val info = mutableListOf<String>()
 
         if (soh != null) {
             when {
-                soh >= 90.0 -> reasons += "Износ батареи небольшой: SOH ${f(soh)}%."
-                soh >= 80.0 -> { sev = maxOf(sev, 1); reasons += "Заметный износ батареи: SOH ${f(soh)}%." }
-                else -> { sev = maxOf(sev, 2); reasons += "Сильный износ батареи: SOH ${f(soh)}% (ниже 80%)." }
+                soh >= 90.0 -> good += "Износ батареи небольшой: SOH ${f(soh)}%."
+                soh >= 80.0 -> { sev = maxOf(sev, 1); bad += "Заметный износ батареи: SOH ${f(soh)}%." }
+                else -> { sev = 2; batteryBad = true; bad += "Сильный износ батареи: SOH ${f(soh)}% (ниже 80%)." }
             }
         }
         if (spreadMv != null) {
             when {
-                spreadMv <= 30.0 -> reasons += "Ячейки сбалансированы: разброс ${f(spreadMv)} мВ."
-                spreadMv <= 80.0 -> { sev = maxOf(sev, 1); reasons += "Разброс напряжений ячеек ${f(spreadMv)} мВ: возможен дисбаланс." }
-                else -> { sev = maxOf(sev, 2); reasons += "Разброс напряжений ячеек ${f(spreadMv)} мВ: вероятна слабая ячейка или модуль." }
+                spreadMv <= 30.0 -> good += "Ячейки сбалансированы: разброс ${f(spreadMv)} мВ."
+                spreadMv <= 80.0 -> { sev = maxOf(sev, 1); bad += "Разброс напряжений ячеек ${f(spreadMv)} мВ: возможен дисбаланс." }
+                else -> { sev = 2; batteryBad = true; bad += "Разброс напряжений ячеек ${f(spreadMv)} мВ: вероятна слабая ячейка или модуль." }
             }
         }
-        val hv = dtcCodes.filter { it.startsWith("P0A") }
-        val other = dtcCodes.filter { !it.startsWith("P0A") }
+        val hv = dtcCodes.map { it.substringBefore('-') }.distinct().filter { it.startsWith("P0A") }
+        val other = dtcCodes.map { it.substringBefore('-') }.distinct().filter { !it.startsWith("P0A") }
         if (hv.isNotEmpty()) {
             sev = 2
-            reasons += "Ошибки высоковольтной системы: ${hv.joinToString(", ")}."
+            bad += "Ошибки высоковольтной системы: ${hv.joinToString(", ")}."
         }
         if (other.isNotEmpty()) {
             sev = maxOf(sev, 1)
-            reasons += "Есть коды ошибок: ${other.joinToString(", ")}."
+            bad += "Есть коды ошибок: ${other.joinToString(", ")}."
         }
-        if (!dtcRead) reasons += "Коды ошибок не читались."
+        if (!dtcRead) info += "Коды ошибок не читались."
         if (soh == null && spreadMv == null) {
-            reasons += "Данных батареи (SOH, ячейки) для этой модели нет: нужен профиль. Используйте «Сбор данных»."
+            info += "Данных батареи (SOH, ячейки) для этой модели нет: нужен профиль. Используйте «Сбор данных»."
         }
 
         val level = when {
@@ -59,10 +62,11 @@ object Verdict {
         val title = when (level) {
             Level.GREEN -> "Состояние хорошее"
             Level.YELLOW -> "Требует внимания"
-            Level.RED -> "Серьёзные замечания"
+            Level.RED -> if (hv.isNotEmpty() && !batteryBad) "Ошибки высоковольтной системы" else "Серьёзные замечания"
             Level.GRAY -> "Недостаточно данных"
         }
-        return VerdictResult(level, title, reasons)
+        // сначала проблемы, затем хорошие показатели, затем пояснения
+        return VerdictResult(level, title, bad + good + info)
     }
 }
 
