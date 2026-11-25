@@ -84,6 +84,28 @@ class DtcTest {
     }
 }
 
+class SupportedPidsTest {
+    @Test
+    fun decodesMask() {
+        // 41 00 BE 1F A8 13: PID 01,03,04,05,06,07,0C,0D,0E,0F,10,11,13,15,1C,1F,20
+        val r = Dtc.supportedPids(0, intArrayOf(0x41, 0x00, 0xBE, 0x1F, 0xA8, 0x13))
+        assertTrue(0x0C in r && 0x0D in r && 0x20 in r)
+        assertTrue(0x02 !in r)
+        assertEquals(0x01, r.first())
+    }
+
+    @Test
+    fun shortReplyGivesEmpty() {
+        assertTrue(Dtc.supportedPids(0, intArrayOf(0x41, 0x00)).isEmpty())
+    }
+
+    @Test
+    fun describeKnownAndUnknown() {
+        assertTrue(Dtc.describe("P0300").contains("пропуски"))
+        assertTrue(Dtc.describe("P1234").startsWith("Описание не найдено"))
+    }
+}
+
 class FormulaTest {
     @Test
     fun standardPids() {
@@ -137,11 +159,21 @@ class SimulatorTest {
     }
 
     @Test
+    fun simulatorReportsSupportedPid() {
+        runBlocking {
+            val e = connected()
+            e.selectEcu("7DF", null)
+            val d = e.query("0100").single() as Reply.Data
+            assertEquals(listOf(0x0D), Dtc.supportedPids(0, d.bytes))
+        }
+    }
+
+    @Test
     fun unsupportedPidIsNoData() {
         runBlocking {
             val e = connected()
             e.selectEcu("7DF", null)
-            assertTrue(e.query("0100").single() is Reply.Error)
+            assertTrue(e.query("0101").single() is Reply.Error)
         }
     }
 

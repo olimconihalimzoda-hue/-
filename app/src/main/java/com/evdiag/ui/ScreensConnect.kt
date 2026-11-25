@@ -24,6 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.DirectionsCar
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.Icon
@@ -43,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.evdiag.data.FileShare
 import com.evdiag.domain.Level
 import com.evdiag.transport.BluetoothTransport
 import com.evdiag.transport.SimulatorTransport
@@ -177,6 +180,30 @@ fun ConnectScreen(vm: DiagViewModel) {
                 },
                 enabled = !vm.busy, filled = false,
             )
+        }
+
+        AppCard {
+            SectionTitle("Проверка адаптера")
+            InfoText(
+                "Для бензиновой или дизельной машины выберите выше профиль «Любой автомобиль (стандартный OBD-II)». " +
+                    "Проверка только читает данные и ничего не меняет.",
+            )
+            ActionButton(
+                "Проверить адаптер и связь", Icons.Rounded.Search,
+                onClick = { vm.runAdapterCheck() },
+                enabled = vm.connected && !vm.busy, filled = false,
+            )
+            for (ln in vm.adapterReport) {
+                Text(ln, style = MaterialTheme.typography.bodySmall)
+            }
+            if (vm.adapterReport.isNotEmpty()) {
+                ActionButton(
+                    "Отправить разработчику", Icons.Rounded.Share,
+                    onClick = { FileShare.file(ctx, vm.saveAdapterReport(), "text/plain", "Проверка адаптера EV Diag") },
+                    filled = false,
+                )
+            }
+            if (!vm.connected) InfoText("Сначала подключитесь к адаптеру.")
         }
 
         if (vm.connected) {

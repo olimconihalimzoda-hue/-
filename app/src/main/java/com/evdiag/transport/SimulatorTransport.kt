@@ -47,6 +47,9 @@ class SimulatorTransport(private val clock: () -> Long = { System.currentTimeMil
     private fun respond(cmd: String): String {
         if (cmd.startsWith("ATZ")) { header = "7DF"; return "ELM327 v1.5 (simulator)" }
         if (cmd.startsWith("ATSH")) { header = cmd.substring(4); return "OK" }
+        if (cmd == "ATI") return "ELM327 v1.5 (simulator)"
+        if (cmd == "ATRV") return "12.6V"
+        if (cmd.startsWith("ATDP")) return "ISO 15765-4 (CAN 11/500)"
         if (cmd.startsWith("AT")) return "OK"
         if (cmd.length < 2 || cmd.length % 2 != 0 || !cmd.all { it in "0123456789ABCDEF" }) return "?"
         val req = cmd.chunked(2).map { it.toInt(16) }
@@ -61,6 +64,7 @@ class SimulatorTransport(private val clock: () -> Long = { System.currentTimeMil
         0x01 -> {
             val pid = req.getOrNull(1) ?: return "NO DATA"
             val data = when (pid) {
+                0x00 -> intArrayOf(0x00, 0x08, 0x00, 0x00) // поддерживается только PID 0D
                 0x0D -> intArrayOf((abs(sin(sec() / 5)) * 60).toInt())
                 0x42 -> { val mv = 12600 + (sin(sec()) * 50).toInt(); intArrayOf(mv shr 8, mv and 0xFF) }
                 0x46 -> intArrayOf(60) // 20 °C

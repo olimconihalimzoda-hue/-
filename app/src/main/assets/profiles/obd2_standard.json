@@ -3,7 +3,7 @@
   "name": "Любой автомобиль (стандартный OBD-II)",
   "verified": true,
   "protocol": "0",
-  "notes": "Стандартные PID SAE J1979. Для большинства EV доступен минимум: скорость, напряжение бортсети, иногда остаток заряда (PID 5B). Подробные данные батареи — только в профилях конкретных марок.",
+  "notes": "Стандартные PID SAE J1979: подходит для бензиновых, дизельных и гибридных машин. У EV обычно доступны только скорость, напряжение бортсети и иногда остаток заряда. Не все PID поддерживаются каждой машиной: недоступные скрываются. Подробные данные батареи EV — только в профилях конкретных моделей.",
   "vinPrefixes": [],
   "ecus": [
     {
@@ -32,6 +32,71 @@
       "id": "hvsoc",
       "ecu": "all",
       "cmd": "015B"
+    },
+    {
+      "id": "rpm",
+      "ecu": "all",
+      "cmd": "010C"
+    },
+    {
+      "id": "load",
+      "ecu": "all",
+      "cmd": "0104"
+    },
+    {
+      "id": "coolant",
+      "ecu": "all",
+      "cmd": "0105"
+    },
+    {
+      "id": "stft",
+      "ecu": "all",
+      "cmd": "0106"
+    },
+    {
+      "id": "ltft",
+      "ecu": "all",
+      "cmd": "0107"
+    },
+    {
+      "id": "map",
+      "ecu": "all",
+      "cmd": "010B"
+    },
+    {
+      "id": "iat",
+      "ecu": "all",
+      "cmd": "010F"
+    },
+    {
+      "id": "maf",
+      "ecu": "all",
+      "cmd": "0110"
+    },
+    {
+      "id": "throttle",
+      "ecu": "all",
+      "cmd": "0111"
+    },
+    {
+      "id": "fuel",
+      "ecu": "all",
+      "cmd": "012F"
+    },
+    {
+      "id": "baro",
+      "ecu": "all",
+      "cmd": "0133"
+    },
+    {
+      "id": "oil",
+      "ecu": "all",
+      "cmd": "015C"
+    },
+    {
+      "id": "fuelrate",
+      "ecu": "all",
+      "cmd": "015E"
     }
   ],
   "fields": [
@@ -71,6 +136,123 @@
       "expr": "b(2)*100/255",
       "decimals": 0,
       "role": "soc"
+    },
+    {
+      "id": "std_rpm",
+      "name": "Обороты двигателя",
+      "unit": "об/мин",
+      "group": "live",
+      "request": "rpm",
+      "expr": "u16(2)/4",
+      "decimals": 0
+    },
+    {
+      "id": "std_load",
+      "name": "Нагрузка двигателя",
+      "unit": "%",
+      "group": "live",
+      "request": "load",
+      "expr": "b(2)*100/255",
+      "decimals": 0
+    },
+    {
+      "id": "std_coolant",
+      "name": "Температура охлаждающей жидкости",
+      "unit": "°C",
+      "group": "live",
+      "request": "coolant",
+      "expr": "b(2)-40",
+      "decimals": 0
+    },
+    {
+      "id": "std_stft",
+      "name": "Краткосрочная коррекция топлива",
+      "unit": "%",
+      "group": "live",
+      "request": "stft",
+      "expr": "(b(2)-128)*100/128",
+      "decimals": 1
+    },
+    {
+      "id": "std_ltft",
+      "name": "Долгосрочная коррекция топлива",
+      "unit": "%",
+      "group": "live",
+      "request": "ltft",
+      "expr": "(b(2)-128)*100/128",
+      "decimals": 1
+    },
+    {
+      "id": "std_map",
+      "name": "Давление во впуске (MAP)",
+      "unit": "кПа",
+      "group": "live",
+      "request": "map",
+      "expr": "b(2)",
+      "decimals": 0
+    },
+    {
+      "id": "std_iat",
+      "name": "Температура воздуха на впуске",
+      "unit": "°C",
+      "group": "live",
+      "request": "iat",
+      "expr": "b(2)-40",
+      "decimals": 0
+    },
+    {
+      "id": "std_maf",
+      "name": "Расход воздуха (MAF)",
+      "unit": "г/с",
+      "group": "live",
+      "request": "maf",
+      "expr": "u16(2)/100",
+      "decimals": 2
+    },
+    {
+      "id": "std_throttle",
+      "name": "Положение дросселя",
+      "unit": "%",
+      "group": "live",
+      "request": "throttle",
+      "expr": "b(2)*100/255",
+      "decimals": 0
+    },
+    {
+      "id": "std_fuel",
+      "name": "Уровень топлива",
+      "unit": "%",
+      "group": "live",
+      "request": "fuel",
+      "expr": "b(2)*100/255",
+      "decimals": 0
+    },
+    {
+      "id": "std_baro",
+      "name": "Атмосферное давление",
+      "unit": "кПа",
+      "group": "live",
+      "request": "baro",
+      "expr": "b(2)",
+      "decimals": 0
+    },
+    {
+      "id": "std_oil",
+      "name": "Температура масла",
+      "unit": "°C",
+      "group": "live",
+      "request": "oil",
+      "expr": "b(2)-40",
+      "decimals": 0
+    },
+    {
+      "id": "std_fuelrate",
+      "name": "Расход топлива",
+      "unit": "л/ч",
+      "group": "live",
+      "request": "fuelrate",
+      "expr": "u16(2)/20",
+      "decimals": 1
     }
   ]
 }

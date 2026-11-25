@@ -143,7 +143,8 @@ private fun BatteryTab(vm: DiagViewModel) {
 
 @Composable
 private fun LiveTab(vm: DiagViewModel) {
-    val fields = vm.profile?.fields.orEmpty().filter { it.group == "live" }
+    val fields = vm.profile?.fields.orEmpty().filter { it.group == "live" && it.request !in vm.deadRequests }
+    val hidden = vm.deadRequests.size
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -153,6 +154,7 @@ private fun LiveTab(vm: DiagViewModel) {
         } else {
             ActionButton("Запустить", Icons.Rounded.PlayArrow, onClick = { vm.startLive() }, enabled = vm.connected)
         }
+        if (hidden > 0) InfoText("Скрыто параметров, которые эта машина не отдаёт: $hidden.")
         for (f in fields) {
             AppCard {
                 Text(f.name, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

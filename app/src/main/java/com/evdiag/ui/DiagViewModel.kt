@@ -87,6 +87,9 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
     val series = mutableStateMapOf<String, List<Float>>()
     val logLines = mutableStateListOf<String>()
     var isDemo by mutableStateOf(false)
+    val adapterReport = mutableStateListOf<String>()
+    private val noDataCount = mutableMapOf<String, Int>()
+    val deadRequests = mutableStateListOf<String>()
     var live by mutableStateOf(false)
 
     // ---------- Проверка и отчёт ----------
@@ -348,6 +351,8 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
     fun startLive() {
         if (live || !connected) return
         live = true
+        noDataCount.clear()
+        deadRequests.clear()
         liveJob = viewModelScope.launch {
             val p = profile ?: return@launch
             val fields = p.fields.filter { it.group == "live" }
@@ -381,11 +386,18 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
         val p = profile ?: return
         ioLock.withLock {
             for ((reqId, group) in fields.groupBy { it.request }) {
+                if ((noDataCount[reqId] ?: 0) >= 2) continue // машина не поддерживает этот параметр
                 val req = p.requests.firstOrNull { it.id == reqId } ?: continue
                 val ecu = p.ecus.firstOrNull { it.id == req.ecu } ?: continue
                 e.selectEcu(ecu.tx, ecu.rx)
                 req.pre.forEach { e.raw(it) }
-                val reply = e.query(req.cmd).filterIsInstance<Reply.Data>().firstOrNull() ?: continue
+                val reply = e.query(req.cmd).filterIsInstance<Reply.Data>().firstOrNull()
+                if (reply == null) {
+                    val n = (noDataCount[reqId] ?: 0) + 1
+                    noDataCount[reqId] = n
+                    if (n >= 2 && reqId !in deadRequests) deadRequests.add(reqId)
+                    continue
+                }
                 for (f in group) {
                     if (f.repeat > 1) {
                         val list = (0 until f.repeat).mapNotNull { f.formula.eval(reply.bytes, it) }
@@ -625,6 +637,53 @@ class DiagViewModel(private val app: Application) : AndroidViewModel(app) {
         val name = profile?.name ?: return null
         val list = records.filter { it.profile == name }.mapNotNull { it.soh }
         return if (list.size >= 3) Pair(list.average(), list.size) else null
+    }
+
+    /** Проверка адаптера: версия, напряжение, протокол, поддерживаемые PID. Только чтение. */
+    fun runAdapterCheck() = runExclusive {
+        val e = elm ?: return@runExclusive
+        ioLock.withLock {
+            adapterReport.clear()
+            adapterReport += "EV Diag ${stamp()}"
+            fun line(label: String, value: String) { adapterReport += "$label: $value" }
+
+            line("Адаптер", runCatching { e.raw("ATI", 2000) }.getOrElse { "нет ответа" })
+            val rv = runCatching { e.raw("ATRV", 2000) }.getOrElse { "нет ответа" }
+            line("Напряжение на разъёме", rv)
+            val volts = Regex("[0-9]+(\\.[0-9]+)?").find(rv)?.value?.toDoubleOrNull()
+            if (volts != null && volts < 11.5) adapterReport += "! Низкое напряжение: включите зажигание или заведите машину."
+            line("Протокол", runCatching { e.raw("ATDP", 2000) }.getOrElse { "нет ответа" })
+
+            e.selectEcu("7DF", null)
+            val supported = mutableListOf<Int>()
+            var base = 0
+            while (base <= 0x40) {
+                val r = runCatching { e.query("01" + "%02X".format(base)) }.getOrNull()
+                    ?.filterIsInstance<Reply.Data>()?.firstOrNull()
+                if (r == null) {
+                    if (base == 0) adapterReport += "! Машина не отвечает на запрос 0100. Проверьте зажигание, разъём и протокол."
+                    break
+                }
+                val list = com.evdiag.obd.Dtc.supportedPids(base, r.bytes)
+                supported += list
+                if ((base + 0x20) !in list) break
+                base += 0x20
+            }
+            if (supported.isNotEmpty()) {
+                line("Поддерживается PID", "${supported.size}")
+                adapterReport += supported.joinToString(" ") { "%02X".format(it) }
+            }
+            line("VIN", vin ?: "не прочитан")
+            adapterReport += if (supported.isNotEmpty()) "Итог: связь с машиной есть." else "Итог: связи с машиной нет."
+        }
+    }
+
+    fun saveAdapterReport(): File {
+        val dir = app.getExternalFilesDir("logs") ?: app.filesDir
+        dir.mkdirs()
+        val f = File(dir, "evdiag-adapter-${stamp()}.txt")
+        f.writeText((adapterReport + "" + "--- журнал команд ---" + logLines.takeLast(150)).joinToString("\n"))
+        return f
     }
 
     fun saveLog(): File {
