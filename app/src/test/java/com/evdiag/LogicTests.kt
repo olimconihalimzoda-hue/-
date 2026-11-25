@@ -139,6 +139,7 @@ class DtcDescribeTest {
     @Test
     fun knownAndUnknownCodes() {
         assertTrue(Dtc.describe("P0A80").contains("батаре"))
-        assertEquals("Описание не найдено", Dtc.describe("P1234"))
+        assertTrue(Dtc.describe("P1234").startsWith("Описание не найдено"))
+        assertEquals("Описание не найдено", Dtc.describe("U9999"))
     }
 }
